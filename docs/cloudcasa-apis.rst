@@ -81,16 +81,88 @@ in the header ``Authorization`` as a "Bearer" token, like so::
 
     Authorization: Bearer <TOKEN>
 
+Organizations
+=============
+
+Every user in CloudCasa belongs to one or more organizations, simply
+called Orgs. When a user signs up and logs in for the first time, a
+new "default" Org is created. The user is the admin for this Org and
+can invite other users (before this can be done, Org name needs to be
+changed from "default" to a more specific name). 
+
+All users in an Org can see all resources except as limited by RBAC.
+
 Backup Flow
 ===========
 
-- Cluster admin registers the cluster in CloudCasa (assume for now
-  that this is done in UI).
+Cluster admin should register the cluster in CloudCasa (assume for now
+that this is done in UI).
 
-- Tenant creation 
+When a new tenant is created (say, "acme-dev'):
 
-  - Cluster admin creates an empty user group in CloudCasa to be
-    associated with this tenant.
+- Create an empty user group in CloudCasa to be associated with this
+  tenant. For simplicity, the name can be tied to tenant name
+  (e.g. "usergroup-acme-dev").
+
+  This group can be given the following permissions (in addition to
+  any other required ones):
+
+  - policies.create
+  - kubebackups.create
+  - kubeclusters.backup and kubeclusters.restore for the specific
+    cluster registered above.
+
+- Invite the tenant admin user to CloudCasa by creating the
+  "orginvite" resource. Pass the user group created above as part of
+  the request body for orginvite. This way, the tenant user would
+  inherit the permissions already given to the user group.
+
+  The invited users would receive an email from CloudCasa containing
+  the link to Sign up or Sign in. Once they do that, they will be able
+  to see the cluster and can proceed to define a backup.
+
+Permissions
+===========
+
+CloudCasa supports the following list of permissions at the moment
+(the list is not exhaustive):
+
+backupinstances.read
+    Allows to see recovery points and all related catalog resources. 
+
+kubebackups.create
+kubebackups.read
+kubebackups.readwrite
+    Permissions to control creation of Kubernetes backups. 
+
+kubeclusters.backup
+kubeclusters.control
+kubeclusters.create
+kubeclusters.read
+kubeclusters.readwrite
+kubeclusters.restore
+kubeclusters.scan
+    Permissions to control cluster operations.
+
+kubehooks.create
+kubehooks.read
+kubehooks.readwrite
+    Permissions to control operations on application hooks. Hooks can
+    be used to freeze/thaw applications during backups and restores.
+
+kubenamespaces.read
+    Allows one to see a namespace.
+
+objectstores.create
+objectstores.read
+objectstores.readwrite
+    Permissions to control creation of backup target S3 storage.
+
+policies.create
+policies.read
+policies.readwrite
+    Permissions to control policy operations. Policies allow
+    scheduling of backups. 
 
 User Groups
 ===========
@@ -106,6 +178,23 @@ Create a user group
         "name": "testusergroup",
         "users": [
             "624df340e1980b575f252fc7"
+        ],
+        "acls": [
+            {
+                "resource: "allresources",
+                "permissions": [
+                    "kubebackups.create",
+                    "policies.create"
+                 ]
+            },
+            {
+                "resource: "kubeclusters",
+                "resourceIds": ["624e188b47ea96df7df16c22"],
+                "permissions": [
+                    "kubeclusters.backup",
+                    "kubeclusters.restore"
+                 ]
+            },
         ]
     }
 
@@ -116,12 +205,31 @@ Create a user group
         "name": "testusergroup",
         "users": [
             "624df340e1980b575f252fc7"
-        ]
+        ],
+        ...
     }
 
 **Notes**
 
 - "users" is optional.
+
+Schema for "acls"
+~~~~~~~~~~~~~~~~~
+
+resource
+    Required. Name of the resource type. E.g. "policies", "kubebackups".
+
+resourceIds
+    Optional. IDs of the resources for which permissions need to be
+    assigned.
+
+permissions
+    List of permissions strings. E.g. ["policies.create"]. One of
+    "permissions" or "roles" must be provided.
+
+roles
+    List of role IDs. One of "permissions" or "roles" must be
+    provided.
 
 Updating a user group
 ---------------------
@@ -135,7 +243,7 @@ Get a user group
 
 .. code-block:: javascript
 
-    PUT /api/v1/usergroups/624e188b47ea96df6df16c22
+    GET /api/v1/usergroups/624e188b47ea96df6df16c22
 
 List user groups
 ----------------
@@ -149,6 +257,95 @@ Delete a user group
 
 .. code-block:: javascript
 
-    DELETE /api/v1/usergroups
+    DELETE /api/v1/usergroups/624e188b47ea96df6df16c22
 
+Roles
+=====
 
+Roles are group of permissions and can be used to conveniently assign
+a group of permissions as a unit.
+
+Creating a role
+---------------
+
+.. code-block:: javascript
+
+    POST /api/v1/roles
+    
+    {
+        "name": "testrole",
+        "permissions": [
+            "kubebackups.create",
+            "policies.create"
+        ]
+    }
+    
+    201 CREATED
+
+    {
+        "name": "testrole",
+        "permissions": [
+            "kubebackups.create",
+            "policies.create"
+        ],
+        "type": "CUSTOM",
+        ...
+    }
+
+Updating a role
+---------------
+
+.. code-block:: javascript
+
+    PUT /api/v1/roles
+
+Get a role
+==========
+
+.. code-block:: javascript
+
+    GET /api/v1/roles/624e188b47ea96df6df16c22
+
+List roles
+----------
+
+.. code-block:: javascript
+
+    GET /api/v1/roles
+
+Delete a role
+-------------
+
+.. code-block:: javascript
+
+    DELETE /api/v1/roles/624e188b47ea96df6df16c22
+
+**Notes**
+
+- Deletion of roles would fail if they are in use.
+
+Inviting a user to CloudCasa
+============================
+
+This is achieved by creating a resource called "orginvite". 
+
+Creating an orginvite
+---------------------
+
+.. code-block:: javascript
+
+    POST /api/v1/orginvites
+
+    {
+        "email": "testuser@example.com",
+        "first_name": "Zaphod",
+        "last_name": "B",
+        "usergroups": ["624e188b47ea96df6df16c22"]
+    }
+
+    201 CREATED
+
+    {
+        "_id": "61a500e02b91151e39ec3895",
+        ...
+    }
