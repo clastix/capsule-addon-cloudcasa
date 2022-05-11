@@ -349,3 +349,48 @@ Creating an orginvite
         "_id": "61a500e02b91151e39ec3895",
         ...
     }
+
+Assigning permissions
+=====================
+
+Permissions will be mainly assigned and updated from a user, user
+group, or api key's point of view.
+
+Assigning permissions on resources to a user::
+
+    POST /api/v1/orgs/625d6e1fa50646661ff9b0d8/user/625d6e1fa50646661ff9b0d6/action/update-acls
+
+    {
+        "acls": [
+            {
+                "roles": [
+                    "6252e1ac85a0eec3867a4542",
+                    ...
+                ],
+                "permissions": [
+                    "kubeclusters.view",
+                    ...
+                ],
+                "resource": "allresources",
+                "resourceIds": [<resource ID1>, ...]
+            }
+        ]
+    }
+
+    200 OK
+
+Permissions can be assigned to a user group or an API key in a similar
+way:: 
+
+    POST /api/v1/usergroups/625205940fe403fbe51aacf9/action/update-acls
+    POST /api/v1/apikeys/625205940fe403fbe51aacf9/action/update-acls
+
+**Notes**
+
+- resource IDs are optional. When not given, permissions apply to all
+  resources of the given type.
+
+- One of "roles" or "permissions" must be given.
+
+- A rule can contain both permissions and roles.
+
