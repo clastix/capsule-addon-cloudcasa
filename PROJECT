@@ -1,0 +1,9 @@
+domain: github.com/clastix/capsule-addon-cloudcasa
+layout:
+- go.kubebuilder.io/v3
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
+projectName: capsule-addon-cloudcasa
+repo: github.com/clastix/capsule-addon-cloudcasa
+version: "3"
