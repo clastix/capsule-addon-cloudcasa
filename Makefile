@@ -2,7 +2,7 @@ oapi:
 	$(OAPI_CODEGEN) -generate "types,client" -include-tags "Usergroup,User,Orginvite,Kubenamespace,Internalacl,Org" -package "oapi" -o "./internal/cloudcasa/oapi/oapi.go" ./internal/cloudcasa/oapi/oapi.yaml
 
 # Image URL to use all building/pushing image targets
-IMG ?= quay.io/clastix/capsule-addon-cloudcasa:latest
+IMG ?= quay.io/clastix/capsule-addon-cloudcasa:v0.1.0
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))

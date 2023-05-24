@@ -220,7 +220,7 @@ spec:
               key: token
               name: cloudcasa-api-token
               optional: false
-        image: quay.io/clastix/capsule-addon-cloudcasa:latest
+        image: quay.io/clastix/capsule-addon-cloudcasa:v0.1.0
         livenessProbe:
           httpGet:
             path: /healthz
