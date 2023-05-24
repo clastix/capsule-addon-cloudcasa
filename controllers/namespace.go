@@ -6,7 +6,8 @@ package controllers
 import (
 	"context"
 	"fmt"
-	capsulev1beta1 "github.com/clastix/capsule/api/v1beta1"
+
+	capsulev1beta2 "github.com/clastix/capsule/api/v1beta2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -30,7 +31,7 @@ type Namespace struct {
 }
 
 func (n *Namespace) SetupWithManager(mgr manager.Manager) error {
-	capsuleLabel, err := capsulev1beta1.GetTypeLabel(&capsulev1beta1.Tenant{})
+	capsuleLabel, err := capsulev1beta2.GetTypeLabel(&capsulev1beta2.Tenant{})
 	if err != nil {
 		return err
 	}
@@ -47,7 +48,7 @@ func (n *Namespace) SetupWithManager(mgr manager.Manager) error {
 
 			return len(tenantName) > 0
 		}))).
-		For(&capsulev1beta1.Tenant{}).
+		For(&capsulev1beta2.Tenant{}).
 		Complete(n)
 }
 
@@ -56,7 +57,7 @@ func (n *Namespace) Reconcile(ctx context.Context, request reconcile.Request) (r
 
 	logger.Info("Reconciliation started")
 
-	tnt := &capsulev1beta1.Tenant{}
+	tnt := &capsulev1beta2.Tenant{}
 	if err := n.client.Get(ctx, request.NamespacedName, tnt); err != nil {
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -136,7 +137,7 @@ func (n *Namespace) addToQueue(queue workqueue.RateLimitingInterface, tenantName
 	})
 }
 
-func (n *Namespace) reconcileNamespace(ctx context.Context, ns *corev1.Namespace, tnt *capsulev1beta1.Tenant) error {
+func (n *Namespace) reconcileNamespace(ctx context.Context, ns *corev1.Namespace, tnt *capsulev1beta2.Tenant) error {
 	_, err := controllerutil.CreateOrUpdate(ctx, n.client, ns, func() error {
 		labels := ns.GetLabels()
 		labels["restored"] = "true"

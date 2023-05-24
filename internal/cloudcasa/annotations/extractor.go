@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"strings"
 
-	capsulev1beta1 "github.com/clastix/capsule/api/v1beta1"
+	capsulev1beta2 "github.com/clastix/capsule/api/v1beta2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Extractor struct{}
 
-func (e Extractor) OrganizationID(tenant *capsulev1beta1.Tenant) string {
+func (e Extractor) OrganizationID(tenant *capsulev1beta2.Tenant) string {
 	annotations := tenant.GetAnnotations()
 
 	if annotations == nil {
@@ -52,7 +52,7 @@ func (e Extractor) UserGroupID(object client.Object) (string, bool) {
 	return v, ok
 }
 
-func (e Extractor) OwnerEmail(tenant *capsulev1beta1.Tenant, owner capsulev1beta1.OwnerSpec) string {
+func (e Extractor) OwnerEmail(tenant *capsulev1beta2.Tenant, owner capsulev1beta2.OwnerSpec) string {
 	email := owner.Name
 
 	annotations := tenant.GetAnnotations()

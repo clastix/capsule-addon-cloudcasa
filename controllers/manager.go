@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"net/http"
 
-	capsulev1beta1 "github.com/clastix/capsule/api/v1beta1"
+	capsulev1beta2 "github.com/clastix/capsule/api/v1beta2"
 	goerr "github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
@@ -46,7 +46,7 @@ func (m *Manager) SetupWithManager(serverURL, token string, mgr manager.Manager)
 	m.extractor = &annotations.Extractor{}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&capsulev1beta1.Tenant{}, builder.WithPredicates(predicate.Funcs{
+		For(&capsulev1beta2.Tenant{}, builder.WithPredicates(predicate.Funcs{
 			CreateFunc: func(event event.CreateEvent) (ok bool) {
 				_, ok = m.extractor.ClusterID(event.Object)
 				if !ok {
@@ -78,14 +78,14 @@ func (m *Manager) Reconcile(ctx context.Context, request reconcile.Request) (rec
 
 	logger.Info("Starting reconciliation")
 
-	tenant := &capsulev1beta1.Tenant{}
+	tenant := &capsulev1beta2.Tenant{}
 
 	if err := m.client.Get(ctx, request.NamespacedName, tenant); err != nil {
 		if k8serr.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
 
-		logger.Error(err, "cannot retrieve *capsulev1beta1.Tenant")
+		logger.Error(err, "cannot retrieve *capsulev1beta2.Tenant")
 
 		return reconcile.Result{}, err
 	}
@@ -109,7 +109,7 @@ func (m *Manager) Reconcile(ctx context.Context, request reconcile.Request) (rec
 	return reconcile.Result{}, nil
 }
 
-func (m *Manager) ensureUser(ctx context.Context, owner capsulev1beta1.OwnerSpec, tenant *capsulev1beta1.Tenant) error {
+func (m *Manager) ensureUser(ctx context.Context, owner capsulev1beta2.OwnerSpec, tenant *capsulev1beta2.Tenant) error {
 	_, userGroup, err := m.retrieveUserGroup(ctx, tenant)
 
 	email := m.extractor.OwnerEmail(tenant, owner)
@@ -173,7 +173,7 @@ func (m *Manager) retrieveUserGroupByID(ctx context.Context, id string) (string,
 	}
 }
 
-func (m *Manager) retrieveUserGroup(ctx context.Context, tenant *capsulev1beta1.Tenant) (etag string, userGroup *cloudcasa.Usergroup, err error) {
+func (m *Manager) retrieveUserGroup(ctx context.Context, tenant *capsulev1beta2.Tenant) (etag string, userGroup *cloudcasa.Usergroup, err error) {
 	id, ok := m.extractor.UserGroupID(tenant)
 	if ok {
 		return m.retrieveUserGroupByID(ctx, id)
@@ -182,7 +182,7 @@ func (m *Manager) retrieveUserGroup(ctx context.Context, tenant *capsulev1beta1.
 	return m.retrieveUserGroupFromAPI(ctx, tenant)
 }
 
-func (m *Manager) retrieveUserGroupFromAPI(ctx context.Context, tenant *capsulev1beta1.Tenant) (string, *cloudcasa.Usergroup, error) {
+func (m *Manager) retrieveUserGroupFromAPI(ctx context.Context, tenant *capsulev1beta2.Tenant) (string, *cloudcasa.Usergroup, error) {
 	where := cloudcasa.QueryWhere(fmt.Sprintf(`{"name": %q}`, tenant.GetName()))
 
 	res, err := m.cloudCasa.Getv1usergroupsWithResponse(ctx, &cloudcasa.Getv1usergroupsParams{Where: &where})
@@ -206,7 +206,7 @@ func (m *Manager) retrieveUserGroupFromAPI(ctx context.Context, tenant *capsulev
 	}
 }
 
-func (m *Manager) createUserGroup(ctx context.Context, tenant *capsulev1beta1.Tenant) (string, *cloudcasa.Usergroup, error) {
+func (m *Manager) createUserGroup(ctx context.Context, tenant *capsulev1beta2.Tenant) (string, *cloudcasa.Usergroup, error) {
 	res, err := m.cloudCasa.Postv1usergroupsWithResponse(ctx, cloudcasa.Postv1usergroupsJSONRequestBody{
 		Id: nil,
 		Acls: &[]cloudcasa.UserGroupACL{
@@ -236,7 +236,7 @@ func (m *Manager) createUserGroup(ctx context.Context, tenant *capsulev1beta1.Te
 	return m.retrieveUserGroupFromAPI(ctx, tenant)
 }
 
-func (m *Manager) ensureUserGroup(ctx context.Context, tenant *capsulev1beta1.Tenant) error {
+func (m *Manager) ensureUserGroup(ctx context.Context, tenant *capsulev1beta2.Tenant) error {
 	_, userGroup, err := m.retrieveUserGroup(ctx, tenant)
 	if err != nil {
 		return err
@@ -287,7 +287,7 @@ func (m *Manager) createInvitation(ctx context.Context, email, userGroupID, tena
 	return nil
 }
 
-func (m *Manager) ensureKubernetesNamespaces(ctx context.Context, tenant *capsulev1beta1.Tenant) error {
+func (m *Manager) ensureKubernetesNamespaces(ctx context.Context, tenant *capsulev1beta2.Tenant) error {
 	clusterID, ok := m.extractor.ClusterID(tenant)
 	if !ok {
 		return fmt.Errorf("missing CloudCasa Cluster ID annotation")

@@ -7,7 +7,7 @@ import (
 	"flag"
 	"os"
 
-	capsulev1beta1 "github.com/clastix/capsule/api/v1beta1"
+	capsulev1beta2 "github.com/clastix/capsule/api/v1beta2"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -26,7 +26,7 @@ var (
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(capsulev1beta1.AddToScheme(scheme))
+	utilruntime.Must(capsulev1beta2.AddToScheme(scheme))
 }
 
 func main() {
@@ -72,7 +72,7 @@ func main() {
 	}
 
 	if err = (&controllers.Manager{}).SetupWithManager(serverURL, token, mgr); err != nil {
-		setupLog.Error(err, "unable to set up *capsulev1beta1.Tenant controller")
+		setupLog.Error(err, "unable to set up *capsulev1beta2.Tenant controller")
 		os.Exit(1)
 	}
 

@@ -4,13 +4,13 @@
 package annotations
 
 import (
-	capsulev1beta1 "github.com/clastix/capsule/api/v1beta1"
+	capsulev1beta2 "github.com/clastix/capsule/api/v1beta2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type Annotations interface {
-	OwnerEmail(tenant *capsulev1beta1.Tenant, owner capsulev1beta1.OwnerSpec) string
+	OwnerEmail(tenant *capsulev1beta2.Tenant, owner capsulev1beta2.OwnerSpec) string
 	UserGroupID(object client.Object) (string, bool)
 	ClusterID(object client.Object) (string, bool)
-	OrganizationID(tenant *capsulev1beta1.Tenant) string
+	OrganizationID(tenant *capsulev1beta2.Tenant) string
 }
