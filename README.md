@@ -1,6 +1,6 @@
-# Capsule Addon for CloudCasa.io by Catalog
+# Capsule Add-on for CloudCasa by Catalogic
 
-Empower your self-service and effortless Kubernetes backups and restores taking full advantage of the multi-tenancy!
+Empower your team with self-service and effortless Kubernetes backups and restores taking full advantage of multi-tenancy!
 
 ## Prerequisites
 
